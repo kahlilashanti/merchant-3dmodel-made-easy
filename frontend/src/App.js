@@ -18,21 +18,18 @@ const App = () => {
             return;
         }
 
-        // Ensure the URL starts with "https://"
         let formattedUrl = shopifyUrl.trim();
         if (!formattedUrl.startsWith("https://")) {
             formattedUrl = `https://${formattedUrl}`;
         }
 
-        // Ensure the Shopify API request points to the correct endpoint
         const apiUrl = `${formattedUrl}/products.json`;
 
         try {
-            console.log("Fetching products from:", apiUrl); // ✅ Debugging log
+            console.log("Fetching products from:", apiUrl);
             const response = await axios.get(apiUrl);
             console.log("Shopify API Response:", response.data);
 
-            // ✅ Fix image URLs and limit to 5 products
             const filteredProducts = (response.data.products || []).slice(0, 5).map(product => ({
                 ...product,
                 image: product?.images?.[0]?.src || "https://via.placeholder.com/150"
@@ -56,17 +53,19 @@ const App = () => {
         toast.info("Converting to 3D...");
 
         try {
+            console.log("🚀 Sending image to Meshy API:", selectedProduct.image);
             const meshyResponse = await axios.post("http://localhost:5001/meshy/upload", { imageUrl: selectedProduct.image });
+            console.log("✅ Meshy API Response:", meshyResponse.data);
+
+            console.log("🚀 Sending image to Masterpiece API:", selectedProduct.image);
             const masterpieceResponse = await axios.post("http://localhost:5001/masterpiece/upload", { imageUrl: selectedProduct.image });
+            console.log("✅ Masterpiece API Response:", masterpieceResponse.data);
 
-            console.log("Meshy API Response:", meshyResponse.data);
-            console.log("Masterpiece API Response:", masterpieceResponse.data);
-
-            setMeshyModel(meshyResponse.data.taskId);
-            setMasterpieceModel(masterpieceResponse.data.requestId);
+            setMeshyModel(meshyResponse.data.result || "No Meshy model ID returned");
+            setMasterpieceModel(masterpieceResponse.data.requestId || "No Masterpiece request ID returned");
             toast.success("3D models are being generated!");
         } catch (error) {
-            console.error("Error converting image to 3D:", error);
+            console.error("❌ Error converting image to 3D:", error);
             toast.error("3D conversion failed. Please try again.");
         }
 
@@ -84,7 +83,6 @@ const App = () => {
             />
             <button onClick={fetchProducts}>Load Products</button>
 
-            {/* ✅ Display fetched products */}
             <div className="product-list">
                 {products.length > 0 ? (
                     products.map((product) => (
@@ -98,7 +96,6 @@ const App = () => {
                 )}
             </div>
 
-            {/* ✅ Show selected product */}
             {selectedProduct && (
                 <div>
                     <h2>Selected Product: {selectedProduct.title}</h2>
@@ -112,4 +109,3 @@ const App = () => {
 };
 
 export default App;
-
